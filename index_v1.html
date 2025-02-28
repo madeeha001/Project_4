@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pneumonia Detection System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        /* Navbar */
+        .navbar {
+            background-color: #007bff;
+            padding: 15px;
+            text-align: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        /* Main container */
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+            display: none;
+            border-radius: 5px;
+        }
+        #result {
+            margin-top: 15px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .loading {
+            font-size: 16px;
+            color: #555;
+        }
+        /* Info section */
+        .info {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            text-align: center;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .info h2 {
+            color: #007bff;
+        }
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 15px;
+            background-color: #007bff;
+            color: white;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <div class="navbar">
+        Pneumonia Detection System
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <h2>Upload a Chest X-ray</h2>
+        <p>Our AI-powered model will analyze your X-ray and predict if pneumonia is detected.</p>
+        <input type="file" id="fileInput" accept="image/*">
+        <img id="imagePreview" alt="Selected Image">
+        <p id="loadingMessage" class="loading" style="display: none;">Processing...</p>
+        <p id="result"></p>
+    </div>
+
+    <!-- Information Section -->
+    <div class="info">
+        <h2>What is Pneumonia?</h2>
+        <p>Pneumonia is a lung infection that can cause mild to severe illness. It inflames the air sacs in one or both lungs, which may fill with fluid. Early detection is crucial for proper treatment.</p>
+        <h2>How Our AI Works</h2>
+        <p>We use a deep learning model trained on thousands of chest X-ray images to detect pneumonia with high accuracy. Simply upload your X-ray, and our model will predict the result instantly.</p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        &copy; 2025 Pneumonia Detection | AI-Powered Diagnosis
+    </div>
+    
+    <script>
+        document.getElementById('fileInput').addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            const resultText = document.getElementById("result");
+            const loadingMessage = document.getElementById("loadingMessage");
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const image = document.getElementById('imagePreview');
+                    image.src = e.target.result;
+                    image.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+
+                // Show loading message
+                loadingMessage.style.display = "block";
+                resultText.innerText = "";
+                const formData = new FormData();
+                formData.append("image", file);
+                
+                try {
+                    const response = await fetch("http://localhost:5000/predict", {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("Server error. Please try again.");
+                    }
+
+                    const data = await response.json();
+                    resultText.innerText = data.prediction;
+
+                    // Change text color based on result
+                    if (data.prediction.includes("PNEUMONIA")) {
+                        resultText.style.color = "red";
+                    } else {
+                        resultText.style.color = "green";
+                    }
+                } catch (error) {
+                    resultText.innerText = "Error: " + error.message;
+                    resultText.style.color = "red";
+                } finally {
+                    // Hide loading message
+                    loadingMessage.style.display = "none";
+                }
+                
+            }
+        });
+    </script>
+</body>
+</html>
