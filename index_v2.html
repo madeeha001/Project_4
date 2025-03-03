@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pneumonia Detection System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        /* Navbar */
+        .navbar {
+            background-color: #007bff;
+            padding: 15px;
+            text-align: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        /* Layout */
+        .main-content {
+            display: flex;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .left-section, .right-section {
+            width: 50%;
+            padding: 20px;
+        }
+        .left-section h2 {
+            color: #007bff;
+        }
+        .right-section {
+            text-align: center;
+            border-left: 2px solid #ddd;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+            display: none;
+            border-radius: 5px;
+        }
+        #result {
+            margin-top: 15px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .loading {
+            font-size: 16px;
+            color: #555;
+        }
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 15px;
+            background-color: #007bff;
+            color: white;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <div class="navbar">
+        Pneumonia Detection System
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        
+        <!-- Left Section: Information -->
+        <div class="left-section">
+            <h2>What is Pneumonia?</h2>
+            <p>Pneumonia is a lung infection that causes inflammation in the air sacs of one or both lungs. These air sacs may fill with fluid or pus, leading to coughing, fever, chills, and difficulty breathing.</p>
+            <h2>Who is at Risk?</h2>
+            <p>Pneumonia is most common in young children, older adults (65+), and people with weakened immune systems or chronic illnesses such as asthma or COPD.</p>
+            <h2>How to Prevent Pneumonia?</h2>
+            <ul>
+                <li>Get vaccinated (pneumococcal and flu vaccines)</li>
+                <li>Practice good hygiene (wash hands regularly)</li>
+                <li>Avoid smoking and limit alcohol consumption</li>
+                <li>Maintain a healthy lifestyle with proper nutrition</li>
+            </ul>
+        </div>
+        
+        <!-- Right Section: Image Upload Module -->
+        <div class="right-section">
+            <h2>Upload a Chest X-ray</h2>
+            <p>Our AI-powered model will analyze your X-ray and predict if pneumonia is detected.</p>
+            <input type="file" id="fileInput" accept="image/*">
+            <img id="imagePreview" alt="Selected Image">
+            <p id="loadingMessage" class="loading" style="display: none;">Processing...</p>
+            <p id="result"></p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        &copy; 2025 Pneumonia Detection | AI-Powered Diagnosis
+    </div>
+    
+    <script>
+        document.getElementById('fileInput').addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            const resultText = document.getElementById("result");
+            const loadingMessage = document.getElementById("loadingMessage");
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const image = document.getElementById('imagePreview');
+                    image.src = e.target.result;
+                    image.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+
+                // Show loading message
+                loadingMessage.style.display = "block";
+                resultText.innerText = "";
+                const formData = new FormData();
+                formData.append("image", file);
+                
+                try {
+                    const response = await fetch("http://localhost:5000/predict", {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("Server error. Please try again.");
+                    }
+
+                    const data = await response.json();
+                    resultText.innerText = data.prediction;
+
+                    // Change text color based on result
+                    if (data.prediction.includes("PNEUMONIA")) {
+                        resultText.style.color = "red";
+                    } else {
+                        resultText.style.color = "green";
+                    }
+                } catch (error) {
+                    resultText.innerText = "Error: " + error.message;
+                    resultText.style.color = "red";
+                } finally {
+                    // Hide loading message
+                    loadingMessage.style.display = "none";
+                }
+            }
+        });
+    </script>
+</body>
+</html>
